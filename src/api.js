@@ -87,3 +87,65 @@ export async function fetchAllData(yearIds) {
   ])
   return { indikatorer, temaer, mobbing, deltakelse }
 }
+
+// Nasjonalt gjennomsnitt: EnhetNivaa(1) = nasjonalt, Nasjonaltkode(I) = hele landet
+export async function fetchNationalData(tableId, yearIds) {
+  if (!yearIds.length) return []
+  try {
+    const yearFilter = yearIds.join('_')
+    const url = `${BASE_URL}/${tableId}/data?filter=TidID(${yearFilter})_EnhetNivaa(1)_Nasjonaltkode(I)_EierformID(-10)_KjoennID(-10)&format=0&sideNummer=1&antallRader=10000`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`API-feil: ${res.status}`)
+    const data = await res.json()
+    return data.data || data || []
+  } catch (error) {
+    console.warn(`Feil ved henting av nasjonale data for tabell ${tableId}:`, error.message)
+    return []
+  }
+}
+
+export async function fetchAllNationalData(yearIds) {
+  const [indikatorer, temaer, mobbing, deltakelse] = await Promise.all([
+    fetchNationalData(TABLE_IDS.INDIKATORER, yearIds),
+    fetchNationalData(TABLE_IDS.TEMAER, yearIds),
+    fetchNationalData(TABLE_IDS.MOBBING, yearIds),
+    fetchNationalData(TABLE_IDS.DELTAKELSE, yearIds),
+  ])
+  return { indikatorer, temaer, mobbing, deltakelse }
+}
+
+export async function fetchSchoolData(tableId, yearIds, orgNr) {
+  if (!yearIds.length || !orgNr) return []
+  try {
+    const yearFilter = yearIds.join('_')
+    const url = `${BASE_URL}/${tableId}/data?filter=TidID(${yearFilter})_Organisasjonsnummer(${orgNr})&format=0&sideNummer=1&antallRader=10000`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`API-feil: ${res.status}`)
+    const data = await res.json()
+    return data.data || data || []
+  } catch (error) {
+    console.warn(`Feil ved henting av data for skole ${orgNr}, tabell ${tableId}:`, error.message)
+    return []
+  }
+}
+
+export async function fetchAllSchoolData(yearIds, orgNr) {
+  const [indikatorer, temaer, mobbing, deltakelse] = await Promise.all([
+    fetchSchoolData(TABLE_IDS.INDIKATORER, yearIds, orgNr),
+    fetchSchoolData(TABLE_IDS.TEMAER, yearIds, orgNr),
+    fetchSchoolData(TABLE_IDS.MOBBING, yearIds, orgNr),
+    fetchSchoolData(TABLE_IDS.DELTAKELSE, yearIds, orgNr),
+  ])
+  return { indikatorer, temaer, mobbing, deltakelse }
+}
+
+export const COMPARISON_SCHOOLS = [
+  { name: 'Bergen Katedralskole', orgNr: '974628057' },
+  { name: 'Amalie Skram VGS', orgNr: '921223802' },
+  { name: 'Fyllingsdalen VGS', orgNr: '974628030' },
+  { name: 'Nordahl Grieg VGS', orgNr: '911854647' },
+  { name: 'Tanks VGS', orgNr: '974628022' },
+  { name: 'Årstad VGS', orgNr: '974628049' },
+  { name: 'Danielsen VGS', orgNr: '971569530' },
+  { name: 'Metis VGS', orgNr: '924680636' },
+]

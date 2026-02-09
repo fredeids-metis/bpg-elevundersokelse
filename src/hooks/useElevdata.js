@@ -1,9 +1,12 @@
-import { useState, useEffect, useMemo } from 'react'
-import { fetchAvailableYears, fetchAllData, yearIdToLabel, getDataSource } from '../api'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { fetchAvailableYears, fetchAllData, fetchAllNationalData, fetchAllSchoolData, yearIdToLabel, getDataSource } from '../api'
 
 export function useElevdata() {
   const [yearIds, setYearIds] = useState([])
   const [allData, setAllData] = useState(null)
+  const [nationalData, setNationalData] = useState(null)
+  const [comparisonSchool, setComparisonSchool] = useState(null)
+  const [comparisonData, setComparisonData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [dataSourceState, setDataSourceState] = useState('live')
@@ -22,9 +25,13 @@ export function useElevdata() {
         if (cancelled) return
         setYearIds(years)
 
-        const data = await fetchAllData(years)
+        const [data, natData] = await Promise.all([
+          fetchAllData(years),
+          fetchAllNationalData(years),
+        ])
         if (cancelled) return
         setAllData(data)
+        setNationalData(natData)
         setDataSourceState(getDataSource())
         setSelectedYear(years[years.length - 1])
       } catch (err) {
@@ -37,42 +44,71 @@ export function useElevdata() {
     return () => { cancelled = true }
   }, [])
 
+  // Hent data for sammenligningsskole når den endres
+  useEffect(() => {
+    if (!comparisonSchool || !yearIds.length) {
+      setComparisonData(null)
+      return
+    }
+    let cancelled = false
+    async function loadComparison() {
+      const data = await fetchAllSchoolData(yearIds, comparisonSchool.orgNr)
+      if (!cancelled) setComparisonData(data)
+    }
+    loadComparison()
+    return () => { cancelled = true }
+  }, [comparisonSchool, yearIds])
+
+  const filterRows = useCallback((rows) => {
+    if (!rows) return []
+    return rows.filter(row => {
+      if (selectedYear && row.Skoleaarnavn !== yearIdToLabel(selectedYear)) return false
+      if (selectedTrinn !== 'Alle' && row.Trinnnavn && !row.Trinnnavn.includes(getTrinnFilter(selectedTrinn))) return false
+      if (selectedKjoenn !== 'Alle' && row.Kjoenn && !row.Kjoenn.includes(selectedKjoenn)) return false
+      return true
+    })
+  }, [selectedYear, selectedTrinn, selectedKjoenn])
+
   const filteredData = useMemo(() => {
     if (!allData) return null
-
-    function matchYear(row) {
-      if (!selectedYear) return true
-      return row.Skoleaarnavn === yearIdToLabel(selectedYear)
-    }
-
-    function matchTrinn(row) {
-      if (selectedTrinn === 'Alle') return true
-      if (!row.Trinnnavn) return true
-      return row.Trinnnavn.includes(getTrinnFilter(selectedTrinn))
-    }
-
-    function matchKjoenn(row) {
-      if (selectedKjoenn === 'Alle') return true
-      if (!row.Kjoenn) return true // Some tables don't have Kjoenn
-      return row.Kjoenn.includes(selectedKjoenn)
-    }
-
-    function filterRows(rows) {
-      return rows.filter(row => matchYear(row) && matchTrinn(row) && matchKjoenn(row))
-    }
-
     return {
       indikatorer: filterRows(allData.indikatorer),
       temaer: filterRows(allData.temaer),
       mobbing: filterRows(allData.mobbing),
       deltakelse: filterRows(allData.deltakelse),
     }
-  }, [allData, selectedYear, selectedTrinn, selectedKjoenn])
+  }, [allData, filterRows])
+
+  const filteredNationalData = useMemo(() => {
+    if (!nationalData) return null
+    return {
+      indikatorer: filterRows(nationalData.indikatorer),
+      temaer: filterRows(nationalData.temaer),
+      mobbing: filterRows(nationalData.mobbing),
+      deltakelse: filterRows(nationalData.deltakelse),
+    }
+  }, [nationalData, filterRows])
+
+  const filteredComparisonData = useMemo(() => {
+    if (!comparisonData) return null
+    return {
+      indikatorer: filterRows(comparisonData.indikatorer),
+      temaer: filterRows(comparisonData.temaer),
+      mobbing: filterRows(comparisonData.mobbing),
+      deltakelse: filterRows(comparisonData.deltakelse),
+    }
+  }, [comparisonData, filterRows])
 
   return {
     yearIds,
     allData,
     filteredData,
+    nationalData,
+    filteredNationalData,
+    comparisonSchool,
+    setComparisonSchool,
+    comparisonData,
+    filteredComparisonData,
     loading,
     error,
     dataSource: dataSourceState,

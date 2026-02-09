@@ -384,6 +384,52 @@ body {
   margin-top: var(--metis-space-1, 0.25rem);
 }
 
+/* Comparison styles */
+.score-card-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: var(--metis-space-1, 0.25rem);
+  font-size: 0.78rem;
+  color: var(--metis-text-secondary, #555);
+}
+
+.comparison-label {
+  font-weight: 500;
+}
+
+.comparison-value {
+  font-weight: 600;
+}
+
+.comparison-diff {
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+}
+
+.comparison-diff.positive {
+  color: #2e7d32;
+  background: rgba(46, 125, 50, 0.1);
+}
+
+.comparison-diff.negative {
+  color: #c62828;
+  background: rgba(198, 40, 40, 0.1);
+}
+
+.diff-positive {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.diff-negative {
+  color: #c62828;
+  font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .app-header {

@@ -25,6 +25,11 @@ export default function App() {
     yearIds,
     allData,
     filteredData,
+    nationalData,
+    filteredNationalData,
+    comparisonSchool,
+    setComparisonSchool,
+    filteredComparisonData,
     loading,
     error,
     dataSource,
@@ -74,6 +79,8 @@ export default function App() {
           onTrinnChange={setSelectedTrinn}
           selectedKjoenn={selectedKjoenn}
           onKjoennChange={setSelectedKjoenn}
+          comparisonSchool={comparisonSchool}
+          onComparisonChange={setComparisonSchool}
         />
 
         {activeTab === 'dashboard' && (
@@ -82,6 +89,10 @@ export default function App() {
             allData={allData}
             yearIds={yearIds}
             selectedYear={selectedYear}
+            filteredNationalData={filteredNationalData}
+            nationalData={nationalData}
+            filteredComparisonData={filteredComparisonData}
+            comparisonSchool={comparisonSchool}
           />
         )}
         {activeTab === 'indikatorer' && (
@@ -89,6 +100,8 @@ export default function App() {
             filteredData={filteredData}
             allData={allData}
             yearIds={yearIds}
+            filteredNationalData={filteredNationalData}
+            nationalData={nationalData}
           />
         )}
         {activeTab === 'temaer' && (
@@ -103,6 +116,8 @@ export default function App() {
             filteredData={filteredData}
             allData={allData}
             yearIds={yearIds}
+            filteredNationalData={filteredNationalData}
+            nationalData={nationalData}
           />
         )}
         {activeTab === 'deltakelse' && (
