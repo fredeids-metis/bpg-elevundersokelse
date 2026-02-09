@@ -28,11 +28,57 @@ body {
   padding: var(--metis-space-6, 1.5rem) var(--metis-space-8, 2rem);
 }
 
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: var(--metis-space-3, 0.75rem);
+  flex-wrap: wrap;
+}
+
 .header-content h1 {
   font-family: var(--metis-font-heading, inherit);
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0;
+}
+
+/* Data source badge */
+.data-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.data-source-badge.live {
+  background: rgba(255, 255, 255, 0.2);
+  color: #b9f6ca;
+}
+
+.data-source-badge.offline {
+  background: rgba(255, 152, 0, 0.25);
+  color: #ffe0b2;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.data-source-badge.live .badge-dot {
+  background: #69f0ae;
+  box-shadow: 0 0 4px #69f0ae;
+}
+
+.data-source-badge.offline .badge-dot {
+  background: #ffb74d;
+  box-shadow: 0 0 4px #ffb74d;
 }
 
 .header-subtitle {

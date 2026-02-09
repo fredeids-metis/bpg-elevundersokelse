@@ -8,6 +8,13 @@ export const TABLE_IDS = {
   DELTAKELSE: 155,
 }
 
+// Tracks whether we're using live or fallback data
+let dataSource = 'live'
+
+export function getDataSource() {
+  return dataSource
+}
+
 export function parseNorwegianNumber(value) {
   if (value == null || value === '') return null
   const cleaned = String(value).replace(/\s/g, '').replace(',', '.')
@@ -26,23 +33,49 @@ export function sortYearIds(yearIds) {
   return [...yearIds].sort((a, b) => a - b)
 }
 
-export async function fetchAvailableYears() {
-  const res = await fetch(
-    `${BASE_URL}/152/filterStatus?filterId=TidID&filter=TidID(*)`
-  )
-  if (!res.ok) throw new Error(`Feil ved henting av tilgjengelige ar: ${res.status}`)
+async function fetchFallbackTable(tableId) {
+  const res = await fetch(`${import.meta.env.BASE_URL}data/tabell_${tableId}.json`)
+  if (!res.ok) throw new Error(`Kunne ikke laste fallback-data for tabell ${tableId}`)
+  return res.json()
+}
+
+async function fetchFallbackYears() {
+  const res = await fetch(`${import.meta.env.BASE_URL}data/years.json`)
+  if (!res.ok) throw new Error('Kunne ikke laste fallback years.json')
   const data = await res.json()
   return sortYearIds(data.TidID || [])
 }
 
+export async function fetchAvailableYears() {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/152/filterStatus?filterId=TidID&filter=TidID(*)`
+    )
+    if (!res.ok) throw new Error(`API-feil: ${res.status}`)
+    const data = await res.json()
+    dataSource = 'live'
+    return sortYearIds(data.TidID || [])
+  } catch (error) {
+    console.warn('API feil ved henting av ar, bruker fallback:', error.message)
+    dataSource = 'fallback'
+    return fetchFallbackYears()
+  }
+}
+
 export async function fetchTableData(tableId, yearIds) {
   if (!yearIds.length) return []
-  const yearFilter = yearIds.join('_')
-  const url = `${BASE_URL}/${tableId}/data?filter=TidID(${yearFilter})_Organisasjonsnummer(${ORG_NR})&format=0&sideNummer=1&antallRader=10000`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Feil ved henting av data fra tabell ${tableId}: ${res.status}`)
-  const data = await res.json()
-  return data.data || data || []
+  try {
+    const yearFilter = yearIds.join('_')
+    const url = `${BASE_URL}/${tableId}/data?filter=TidID(${yearFilter})_Organisasjonsnummer(${ORG_NR})&format=0&sideNummer=1&antallRader=10000`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`API-feil: ${res.status}`)
+    const data = await res.json()
+    return data.data || data || []
+  } catch (error) {
+    console.warn(`API feil for tabell ${tableId}, bruker fallback:`, error.message)
+    dataSource = 'fallback'
+    return fetchFallbackTable(tableId)
+  }
 }
 
 export async function fetchAllData(yearIds) {

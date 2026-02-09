@@ -8,6 +8,7 @@ import Mobbing from './components/Mobbing'
 import Deltakelse from './components/Deltakelse'
 import Loading from './components/Loading'
 import ErrorMessage from './components/ErrorMessage'
+import DataSourceBadge from './components/DataSourceBadge'
 import './App.css'
 
 const TABS = [
@@ -26,6 +27,7 @@ export default function App() {
     filteredData,
     loading,
     error,
+    dataSource,
     selectedYear,
     setSelectedYear,
     selectedTrinn,
@@ -41,7 +43,10 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>Bergen Private Gymnas</h1>
+          <div className="header-top">
+            <h1>Bergen Private Gymnas</h1>
+            <DataSourceBadge source={dataSource} />
+          </div>
           <p className="header-subtitle">Elevundersokelsen</p>
         </div>
       </header>

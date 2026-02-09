@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
-import { fetchAvailableYears, fetchAllData, yearIdToLabel } from '../api'
+import { fetchAvailableYears, fetchAllData, yearIdToLabel, getDataSource } from '../api'
 
 export function useElevdata() {
   const [yearIds, setYearIds] = useState([])
   const [allData, setAllData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [dataSourceState, setDataSourceState] = useState('live')
 
   const [selectedYear, setSelectedYear] = useState(null)
   const [selectedTrinn, setSelectedTrinn] = useState('Alle')
@@ -24,6 +25,7 @@ export function useElevdata() {
         const data = await fetchAllData(years)
         if (cancelled) return
         setAllData(data)
+        setDataSourceState(getDataSource())
         setSelectedYear(years[years.length - 1])
       } catch (err) {
         if (!cancelled) setError(err.message)
@@ -73,6 +75,7 @@ export function useElevdata() {
     filteredData,
     loading,
     error,
+    dataSource: dataSourceState,
     selectedYear,
     setSelectedYear,
     selectedTrinn,
